@@ -25,3 +25,25 @@ TES CO., LTD. S/W1 팀을 위해 제작된 **DeviceNet EPR(Expected Packet Rate)
 - 시나리오 프리셋 버튼 (안전 / 경고 / 위험)
 
 **보조 참고 자료:** `DeviceNet_EPR_Timeout_Guide.pdf` — HTML에서 사용하지 않는 정적 참고 문서.
+
+## 커밋 메시지 규칙
+
+Conventional Commits 형식을 따릅니다.
+
+```
+type(scope): 한국어 설명
+
+변경 이유와 영향 범위를 본문에 작성
+```
+
+**type 목록:**
+
+| type | 용도 |
+|------|------|
+| `feat` | 새로운 기능 추가 |
+| `fix` | 버그 수정 |
+| `docs` | 문서 변경 (README, CLAUDE.md 등) |
+| `style` | 코드 의미에 영향 없는 스타일 변경 (CSS, 포맷 등) |
+| `refactor` | 기능 변경 없는 코드 구조 개선 |
+| `test` | 테스트 추가 또는 수정 |
+| `chore` | 빌드 설정, .gitignore 등 기타 변경 |
