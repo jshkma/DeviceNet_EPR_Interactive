@@ -524,6 +524,29 @@ function update() {
   drawTimeline(epr, pit, timeout);
 }
 
+/**
+ * drawTimeline(epr, pit, timeout)
+ *
+ * HTML5 Canvas에 DeviceNet EPR 타임아웃 타임라인 다이어그램을 렌더링한다.
+ * 슬라이더 값이 변경될 때마다 호출되어 캔버스를 전체 재드로우한다.
+ *
+ * @param {number} epr     - EPR 설정값 (ms). 슬라이더 입력값.
+ * @param {number} pit     - PIT(Packet Interval Time) 설정값 (ms). 슬라이더 입력값.
+ * @param {number} timeout - EPR 타임아웃 값 (ms). 계산식: epr × 4
+ *
+ * 렌더링 구성 요소:
+ *  1. 버스 배경 바       : 시간축을 나타내는 회색 기저 바
+ *  2. 타임아웃 구간 배경  : timeout 범위까지 판정 색상(녹색/노란색/빨간색)으로 음영 표시
+ *  3. Poll 블록 + PIT 갭 : Poll 전송 블록(파란색)과 PIT 대기 구간(녹색 반투명)을 반복 배치
+ *  4. EPR 타임아웃 수직선 : timeout 위치에 점선 + 화살촉으로 임계선 표시
+ *  5. 시간 축 + 눈금     : 하단에 ms 단위 눈금 레이블 표시
+ *  6. 각 구간 레이블     : Poll / PIT 대기 / EPR Timeout 텍스트 레이블
+ *
+ * 판정 색상 기준 (clrTimeout):
+ *  - 녹색  : pit ≤ timeout × 70%  (안전)
+ *  - 노란색 : pit > timeout × 70%  (경고)
+ *  - 빨간색 : pit ≥ timeout        (오류 — 타임아웃 초과)
+ */
 function drawTimeline(epr, pit, timeout) {
   const dpr = window.devicePixelRatio || 1;
   const W   = canvas.parentElement.clientWidth - 24;
