@@ -47,3 +47,21 @@ type(scope): 한국어 설명
 | `refactor` | 기능 변경 없는 코드 구조 개선 |
 | `test` | 테스트 추가 또는 수정 |
 | `chore` | 빌드 설정, .gitignore 등 기타 변경 |
+
+## 작업 이력
+
+### 2026-03-15 — 프로젝트 초기 구성 및 문서화
+
+**초기 커밋 (`c67e30d`)**
+- DeviceNet EPR 타임아웃 학습용 단일 HTML 파일 도구 최초 구성
+- HTML 구조, 내장 CSS, Vanilla JS, Canvas 타임라인 시각화 포함
+
+**README.md 추가 (`929e0ae`)**
+- 프로젝트 개요, 실행 방법, 주요 기능, EPR 타임아웃 공식, 파일 구성, 기술 스택을 포함한 한국어 README 작성
+
+**커밋 메시지 규칙 추가 (`b32acf2`)**
+- CLAUDE.md에 Conventional Commits 형식 적용 기준과 type별 용도 표 문서화
+
+**`drawTimeline` JSDoc 주석 추가 (`7a54a5a`)**
+- `DeviceNet_EPR_Interactive.html` 내 `drawTimeline` 함수에 JSDoc 형식 주석 추가
+- 함수 역할, 파라미터, 렌더링 구성 요소(6가지), 판정 색상 기준 문서화
