@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeviceNet EPR 타임아웃 인터랙티브 학습 도구 — TES S/W1 Team</title>
+<style>
+  :root {
+    --blue:     #1F4E79;
+    --bluem:    #2E75B6;
+    --bluel:    #D6E4F0;
+    --teal:     #0F5132;
+    --tealm:    #1D9E75;
+    --teall:    #D1ECE1;
+    --amber:    #7B4F00;
+    --amberl:   #FFF3CD;
+    --red:      #842029;
+    --redm:     #E24B4A;
+    --redl:     #F8D7DA;
+    --gray:     #495057;
+    --grayl:    #F8F9FA;
+    --graym:    #6C757D;
+    --border:   #DEE2E6;
+    --white:    #FFFFFF;
+    --text:     #212529;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: #EEF2F7;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: var(--blue);
+    color: #fff;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header .sub { font-size: 11px; color: #9DC3E6; margin-top: 2px; }
+  .badge { background: var(--bluem); color: #fff; font-size: 11px;
+           padding: 3px 10px; border-radius: 10px; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+
+  /* Card */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--blue);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--bluel);
+  }
+
+  /* 2열 */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* Metric */
+  .metric {
+    background: var(--grayl); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 10px; text-align: center;
+  }
+  .metric .m-label { font-size: 11px; color: var(--graym); margin-bottom: 4px; }
+  .metric .m-value { font-size: 26px; font-weight: 600; }
+  .metric .m-unit  { font-size: 11px; color: var(--graym); margin-top: 2px; }
+  .metric.hi { border-color: var(--bluem); background: var(--bluel); }
+  .metric.hi .m-value { color: var(--blue); }
+
+  /* Slider row */
+  .sl-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .sl-row label { font-size: 13px; font-weight: 500; min-width: 80px;
+                  color: var(--gray); }
+  .sl-row input[type=range] { flex: 1; min-width: 120px; max-width: 260px; }
+  .sl-val {
+    font-size: 16px; font-weight: 600; min-width: 80px; text-align: right;
+    color: var(--blue);
+  }
+  .sl-desc { font-size: 11px; color: var(--graym); min-width: 120px; }
+
+  /* Canvas */
+  .canvas-wrap {
+    background: var(--grayl); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; margin: 12px 0;
+    overflow: hidden;
+  }
+  canvas { width: 100%; display: block; }
+
+  /* Verdict */
+  .verdict {
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    border-left: 4px solid; margin-top: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .verdict.ok   { background: var(--teall); color: var(--teal);
+                  border-color: var(--tealm); }
+  .verdict.warn { background: var(--amberl); color: var(--amber);
+                  border-color: #EF9F27; }
+  .verdict.err  { background: var(--redl); color: var(--red);
+                  border-color: var(--redm); }
+  .verdict .icon { font-size: 18px; }
+  .verdict .detail { font-weight: 400; font-size: 12px; margin-top: 2px; }
+
+  /* Formula */
+  .formula {
+    background: var(--bluel); border: 1px solid #B5D4F4;
+    border-radius: 8px; padding: 14px 18px;
+    font-size: 14px; text-align: center; color: var(--blue);
+    line-height: 2.2;
+  }
+  .formula .eq { font-size: 18px; font-weight: 600; display: block;
+                 font-family: 'Courier New', monospace; }
+  .formula .note { font-size: 11px; color: var(--graym); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--blue); color: #fff; font-weight: 500;
+    padding: 8px 10px; border: 1px solid #1a4268; text-align: center;
+  }
+  td { padding: 7px 10px; border: 1px solid var(--border); text-align: center; }
+  tr:nth-child(even) td { background: var(--grayl); }
+  td.hl { font-weight: 600; color: var(--blue); background: var(--bluel) !important; }
+  td.ok-c { color: var(--teal); font-weight: 500; }
+  td.warn-c { color: var(--amber); font-weight: 500; }
+  td.err-c { color: var(--red); font-weight: 500; }
+
+  /* Analogy */
+  .analogy {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-top: 10px;
+  }
+  .analogy-box {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px; background: var(--grayl);
+  }
+  .analogy-box .a-title {
+    font-size: 12px; font-weight: 600; color: var(--graym);
+    margin-bottom: 6px; text-transform: uppercase;
+  }
+  .analogy-box .a-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+  /* Step boxes */
+  .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .step {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--grayl);
+  }
+  .step-num {
+    min-width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bluem); color: #fff;
+    font-size: 13px; font-weight: 600; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-body .step-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .step-body .step-desc  { font-size: 12px; color: var(--graym); line-height: 1.6; }
+
+  /* Footer */
+  footer {
+    text-align: center; font-size: 11px; color: var(--graym);
+    padding: 16px; border-top: 1px solid var(--border);
+    background: var(--white); margin-top: 8px;
+  }
+
+  /* 반응형 */
+  @media (max-width: 640px) {
+    .grid2, .grid3, .analogy { grid-template-columns: 1fr; }
+    header { flex-direction: column; gap: 6px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>DeviceNet EPR 타임아웃 인터랙티브 학습 도구</h1>
+    <div class="sub">EPR × 4 규칙 / PIT 상한선 / 연결 감시 타이머 개념 시각화</div>
+  </div>
+  <span class="badge">S/W1 Team · TES CO., LTD.</span>
+</header>
+
+<div class="container">
+
+  <!-- ① 개념 설명 -->
+  <div class="card">
+    <div class="card-title">① EPR이란 무엇인가?</div>
+    <p style="margin-bottom:10px;line-height:1.8">
+      <strong>EPR(Expected Packet Rate)</strong>은 슬레이브 디바이스(MFC/EPC)가
+      마스터로부터 <strong>Poll을 얼마나 자주 받기를 기대하는지</strong> 설정하는 값입니다.<br>
+      이름은 "예상 패킷 속도"이지만, 실제 역할은 <strong style="color:var(--red)">연결 감시 타이머의 기준값</strong>입니다.
+    </p>
+    <div class="analogy">
+      <div class="analogy-box">
+        <div class="a-title">쉬운 비유</div>
+        <div class="a-text">
+          친구에게 <strong>매 75분마다 안부 문자</strong>를 보내기로 약속했다고 가정합니다.<br>
+          친구는 <strong>75 × 4 = 300분</strong> 동안 문자가 오지 않으면<br>
+          "연락이 끊어졌다"고 판단합니다.<br>
+          <span style="font-size:12px;color:var(--graym)">EPR=75, 단위를 ms로 바꾸면 동일한 원리</span>
+        </div>
+      </div>
+      <div class="analogy-box">
+        <div class="a-title">DeviceNet에서의 실제 의미</div>
+        <div class="a-text">
+          슬레이브(MFC/EPC)는 마스터(CIF50-DNM)로부터
+          <strong>EPR × 4 ms</strong> 동안 Poll을 받지 못하면<br>
+          <strong style="color:var(--red)">I/O 연결 타임아웃을 선언</strong>합니다.<br>
+          → 제어 불가, 안전 상태(Safe Value)로 전환
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 핵심 공식 -->
+  <div class="card">
+    <div class="card-title">② 핵심 공식 — EPR × 4</div>
+    <div class="formula">
+      <span class="eq">EPR 타임아웃 [ms]  =  EPR 값  ×  4</span>
+      <div class="note">DeviceNet ODVA 표준 규정 · SyConDN 기본값: EPR = 75 → 타임아웃 = 300 ms</div>
+    </div>
+    <div class="steps" style="margin-top:14px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">× 4의 의미</div>
+          <div class="step-desc">"정상 Poll 주기의 최대 4배까지는 일시적 지연으로 허용"한다는 의미입니다.
+          Poll을 1~3번 놓쳐도 OK, 4번 연속으로 받지 못하면 오류 선언.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">PIT와의 관계</div>
+          <div class="step-desc">PIT(Poll Interval Time)는 마스터가 Poll을 보내는 간격입니다.
+          <strong>PIT &lt; EPR 타임아웃</strong> 조건이 반드시 유지되어야 슬레이브가 타임아웃을 선언하지 않습니다.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">PIT 계산기에서의 역할</div>
+          <div class="step-desc">PIT 계산기가 산출하는 "권장 PIT"는 EPR 타임아웃보다 반드시 작아야 합니다.
+          계산기는 권장 PIT가 EPR 타임아웃의 70% 이하일 때 "안전(녹색)"으로 표시합니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 인터랙티브 타임라인 -->
+  <div class="card">
+    <div class="card-title">③ 인터랙티브 타임라인 — 슬라이더를 조정하세요</div>
+    <p style="font-size:12px;color:var(--graym);margin-bottom:12px">
+      EPR 값과 PIT 값을 바꾸면서 Poll이 EPR 타임아웃 안에 들어오는지 실시간으로 확인할 수 있습니다.
+    </p>
+
+    <!-- 슬라이더 -->
+    <div class="sl-row">
+      <label>EPR 값</label>
+      <input type="range" id="eprSlider" min="10" max="200" value="75" step="5">
+      <span class="sl-val" id="eprDisplay">75</span>
+      <span class="sl-desc" id="eprTimeout">→ 타임아웃 = 300 ms</span>
+    </div>
+    <div class="sl-row">
+      <label>PIT (ms)</label>
+      <input type="range" id="pitSlider" min="5" max="300" value="20" step="5">
+      <span class="sl-val" id="pitDisplay">20 ms</span>
+      <span class="sl-desc" id="pitRatio">타임아웃의 6.7%</span>
+    </div>
+
+    <!-- 메트릭 -->
+    <div class="grid3" style="margin-bottom:12px">
+      <div class="metric hi">
+        <div class="m-label">EPR 타임아웃</div>
+        <div class="m-value" id="mTimeout" style="color:var(--blue)">300</div>
+        <div class="m-unit">ms = EPR × 4</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">설정된 PIT</div>
+        <div class="m-value" id="mPIT">20</div>
+        <div class="m-unit">ms</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">여유 시간 (타임아웃 - PIT)</div>
+        <div class="m-value" id="mMargin" style="color:var(--teal)">280</div>
+        <div class="m-unit">ms</div>
+      </div>
+    </div>
+
+    <!-- 캔버스 -->
+    <div class="canvas-wrap">
+      <canvas id="timeline" height="130"></canvas>
+    </div>
+
+    <!-- 판정 -->
+    <div class="verdict ok" id="verdict">
+      <span class="icon">✓</span>
+      <div>
+        <div id="vText">안전 — PIT가 EPR 타임아웃의 70% 이내입니다.</div>
+        <div class="detail" id="vDetail">슬레이브가 타임아웃을 선언하지 않습니다.</div>
+      </div>
+    </div>
+
+    <!-- 시나리오 빠른 선택 -->
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:12px;color:var(--graym);font-weight:500">시나리오 빠른 선택:</span>
+      <button onclick="setScenario(75,20)"
+        style="padding:4px 10px;font-size:12px;border:1px solid #1D9E75;
+               border-radius:6px;background:#D1ECE1;color:#0F5132;cursor:pointer">
+        안전 (EPR=75, PIT=20)
+      </button>
+      <button onclick="setScenario(75,250)"
+        style="padding:4px 10px;font-size:12px;border:1px solid #EF9F27;
+               border-radius:6px;background:#FFF3CD;color:#7B4F00;cursor:pointer">
+        주의 (EPR=75, PIT=250)
+      </button>
+      <button onclick="setScenario(75,310)"
+        style="padding:4px 10px;font-size:12px;border:1px solid #E24B4A;
+               border-radius:6px;background:#F8D7DA;color:#842029;cursor:pointer">
+        경고 (EPR=75, PIT=310)
+      </button>
+      <button onclick="setScenario(25,90)"
+        style="padding:4px 10px;font-size:12px;border:1px solid #E24B4A;
+               border-radius:6px;background:#F8D7DA;color:#842029;cursor:pointer">
+        경고 (EPR=25, PIT=90)
+      </button>
+    </div>
+  </div>
+
+  <!-- ④ 판정 기준표 -->
+  <div class="card">
+    <div class="card-title">④ PIT vs EPR 타임아웃 판정 기준</div>
+    <table>
+      <tr>
+        <th>조건</th><th>PIT 계산기 판정</th><th>슬레이브 상태</th><th>권장 조치</th>
+      </tr>
+      <tr>
+        <td>PIT &lt; EPR타임아웃 × 70%</td>
+        <td class="ok-c">안전 (녹색)</td>
+        <td>정상 운영 · Explicit 여유 충분</td>
+        <td>현재 PIT 값 SyConDN에 적용</td>
+      </tr>
+      <tr>
+        <td>EPR타임아웃 × 70% ≤ PIT &lt; EPR타임아웃</td>
+        <td class="warn-c">주의 (노란색)</td>
+        <td>정상이지만 여유 매우 부족</td>
+        <td>EPR 값 상향 또는 노드 수 감소</td>
+      </tr>
+      <tr>
+        <td>PIT ≥ EPR타임아웃</td>
+        <td class="err-c">경고 (빨간색)</td>
+        <td>슬레이브 타임아웃 선언 → 연결 끊김</td>
+        <td>500 kbps 업그레이드 필수</td>
+      </tr>
+    </table>
+    <p style="font-size:11px;color:var(--graym);margin-top:8px">
+      ※ 70% 기준은 PIT 계산기가 사용하는 안전 여유 임계값입니다.
+      100%에 도달하기 전에 경보를 주어 타임아웃 발생을 사전에 방지합니다.
+    </p>
+  </div>
+
+  <!-- ⑤ EPR별 참조표 -->
+  <div class="card">
+    <div class="card-title">⑤ EPR 값별 타임아웃 참조표 (SyConDN 설정 참고용)</div>
+    <table>
+      <tr>
+        <th>EPR 값</th>
+        <th>EPR 타임아웃 (ms)</th>
+        <th>PIT 안전 상한 (×70%)</th>
+        <th>PIT 절대 상한 (×100%)</th>
+        <th>비고</th>
+      </tr>
+      <tr>
+        <td>25</td><td>100 ms</td>
+        <td class="warn-c">70 ms</td><td class="err-c">100 ms</td>
+        <td>매우 타이트</td>
+      </tr>
+      <tr>
+        <td>50</td><td>200 ms</td>
+        <td class="warn-c">140 ms</td><td class="err-c">200 ms</td>
+        <td>소규모 네트워크</td>
+      </tr>
+      <tr class="">
+        <td class="hl">75 (기본값)</td>
+        <td class="hl">300 ms</td>
+        <td class="ok-c hl">210 ms</td>
+        <td class="err-c">300 ms</td>
+        <td class="hl">대부분의 환경에 충분</td>
+      </tr>
+      <tr>
+        <td>100</td><td>400 ms</td>
+        <td class="ok-c">280 ms</td><td class="err-c">400 ms</td>
+        <td>노드 많을 때 권장</td>
+      </tr>
+      <tr>
+        <td>150</td><td>600 ms</td>
+        <td class="ok-c">420 ms</td><td class="err-c">600 ms</td>
+        <td>PIT 여유 부족 시</td>
+      </tr>
+      <tr>
+        <td>200</td><td>800 ms</td>
+        <td class="ok-c">560 ms</td><td class="err-c">800 ms</td>
+        <td>최대 여유 확보</td>
+      </tr>
+    </table>
+    <p style="font-size:11px;color:var(--graym);margin-top:8px">
+      ※ EPR 값은 SyConDN → 각 슬레이브 노드 → Connection 탭에서 확인 및 변경할 수 있습니다.
+      MFC/EPC 제조사에 따라 기본값이 다를 수 있으므로 반드시 실제 설정값을 확인하십시오.
+    </p>
+  </div>
+
+  <!-- ⑥ 핵심 요약 -->
+  <div class="card" style="border-color:var(--bluem)">
+    <div class="card-title">⑥ 핵심 요약</div>
+    <div class="grid2">
+      <div style="background:var(--bluel);border-radius:8px;padding:14px">
+        <div style="font-weight:600;color:var(--blue);margin-bottom:6px">
+          기억할 공식
+        </div>
+        <div style="font-family:'Courier New',monospace;font-size:14px;
+                    color:var(--blue);background:#fff;padding:8px;
+                    border-radius:6px;text-align:center;margin-bottom:6px">
+          EPR 타임아웃 = EPR × 4 ms
+        </div>
+        <div style="font-family:'Courier New',monospace;font-size:14px;
+                    color:var(--teal);background:#fff;padding:8px;
+                    border-radius:6px;text-align:center">
+          PIT &lt; EPR 타임아웃 (필수 조건)
+        </div>
+      </div>
+      <div style="background:var(--teall);border-radius:8px;padding:14px">
+        <div style="font-weight:600;color:var(--teal);margin-bottom:6px">
+          실무 적용 포인트
+        </div>
+        <ul style="font-size:13px;color:var(--teal);line-height:2;padding-left:16px">
+          <li>SyConDN 기본 EPR = 75 → 타임아웃 300 ms</li>
+          <li>권장 PIT &lt; 210 ms (300 × 70%)</li>
+          <li>PIT 계산기 결과가 녹색이면 안전</li>
+          <li>노란색이면 EPR 상향 검토</li>
+          <li>빨간색이면 통신속도 업그레이드 필요</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  DeviceNet EPR 타임아웃 인터랙티브 학습 도구 &nbsp;|&nbsp;
+  Hilscher CIF50-DNM 환경 &nbsp;|&nbsp; S/W1 Team · TES CO., LTD.<br>
+  참고: ODVA DeviceNet Technical Series (PUB00026R5)
+</footer>
+
+<script>
+const eprSlider = document.getElementById('eprSlider');
+const pitSlider = document.getElementById('pitSlider');
+const canvas    = document.getElementById('timeline');
+const ctx       = canvas.getContext('2d');
+
+function setScenario(epr, pit) {
+  eprSlider.value = epr;
+  pitSlider.value = Math.min(pit, 300);
+  update();
+}
+
+function update() {
+  const epr     = parseInt(eprSlider.value);
+  const pit     = parseInt(pitSlider.value);
+  const timeout = epr * 4;
+  const margin  = timeout - pit;
+  const ratio   = (pit / timeout * 100).toFixed(1);
+
+  // 텍스트 업데이트
+  document.getElementById('eprDisplay').textContent = epr;
+  document.getElementById('eprTimeout').textContent = `→ 타임아웃 = ${timeout} ms`;
+  document.getElementById('pitDisplay').textContent = `${pit} ms`;
+  document.getElementById('pitRatio').textContent   = `타임아웃의 ${ratio}%`;
+  document.getElementById('mTimeout').textContent   = timeout;
+  document.getElementById('mPIT').textContent       = pit;
+
+  const mMargin = document.getElementById('mMargin');
+  mMargin.textContent = margin;
+  mMargin.style.color = margin > 0
+    ? (pit < timeout * 0.7 ? '#0F5132' : '#7B4F00')
+    : '#842029';
+
+  // 판정
+  const verdict = document.getElementById('verdict');
+  const vText   = document.getElementById('vText');
+  const vDetail = document.getElementById('vDetail');
+  if (pit < timeout * 0.7) {
+    verdict.className = 'verdict ok';
+    verdict.querySelector('.icon').textContent = '✓';
+    vText.textContent   = `안전 — PIT(${pit}ms)가 EPR 타임아웃(${timeout}ms)의 70% 이내입니다.`;
+    vDetail.textContent = `슬레이브가 타임아웃을 선언하지 않습니다. Explicit Message 여유 시간도 충분합니다.`;
+  } else if (pit < timeout) {
+    verdict.className = 'verdict warn';
+    verdict.querySelector('.icon').textContent = '!';
+    vText.textContent   = `주의 — PIT(${pit}ms)가 EPR 타임아웃(${timeout}ms)에 근접합니다.`;
+    vDetail.textContent = `슬레이브 타임아웃은 발생하지 않지만 여유가 매우 부족합니다. EPR 값을 상향하거나 노드 수를 줄이십시오.`;
+  } else {
+    verdict.className = 'verdict err';
+    verdict.querySelector('.icon').textContent = '✗';
+    vText.textContent   = `경고 — PIT(${pit}ms)가 EPR 타임아웃(${timeout}ms)을 초과합니다!`;
+    vDetail.textContent = `슬레이브(MFC/EPC)가 연결 타임아웃을 선언합니다. 통신 속도 업그레이드 또는 EPR 상향이 필요합니다.`;
+  }
+
+  drawTimeline(epr, pit, timeout);
+}
+
+function drawTimeline(epr, pit, timeout) {
+  const dpr = window.devicePixelRatio || 1;
+  const W   = canvas.parentElement.clientWidth - 24;
+  const H   = 130;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const PAD   = 50;
+  const TW    = W - PAD - 16;
+  const TMAX  = Math.max(timeout * 1.25, pit * 1.2, 100);
+  const Y_BUS = 52;
+  const BH    = 22;
+
+  function px(ms) { return PAD + TW * Math.min(ms, TMAX) / TMAX; }
+
+  const clrPoll    = '#2E75B6';
+  const clrPIT     = 'rgba(29,158,117,0.35)';
+  const clrTimeout = timeout <= pit ? '#E24B4A' : (pit > timeout * 0.7 ? '#EF9F27' : '#1D9E75');
+  const clrBusBase = '#E8EEF5';
+  const clrText    = '#495057';
+
+  // 버스 배경
+  ctx.fillStyle = clrBusBase;
+  ctx.beginPath(); ctx.roundRect(PAD, Y_BUS, TW, BH, 4); ctx.fill();
+
+  // EPR 타임아웃 구간 (반투명 배경)
+  const toPx = px(timeout);
+  const toAlpha = timeout <= pit ? 'rgba(226,75,74,0.12)' :
+                  (pit > timeout * 0.7 ? 'rgba(239,159,39,0.12)' : 'rgba(29,158,117,0.12)');
+  ctx.fillStyle = toAlpha;
+  ctx.fillRect(PAD, Y_BUS - 4, Math.min(toPx - PAD, TW), BH + 8);
+
+  // Poll 블록 + PIT 갭 반복
+  const POLL_W = Math.min(TW * 0.04, 16);
+  let x = PAD;
+  let cycle = 0;
+  while (x < PAD + TW - 4 && cycle < 30) {
+    const bw = Math.min(POLL_W, PAD + TW - x - 1);
+    if (bw < 2) break;
+    ctx.fillStyle = clrPoll;
+    ctx.beginPath(); ctx.roundRect(x, Y_BUS + 2, bw, BH - 4, 2); ctx.fill();
+
+    const pitPx = TW * pit / TMAX;
+    const gapEnd = x + bw + pitPx;
+    if (gapEnd <= PAD + TW) {
+      ctx.fillStyle = clrPIT;
+      ctx.fillRect(x + bw, Y_BUS + 2, pitPx, BH - 4);
+    }
+    x = x + bw + pitPx;
+    cycle++;
+  }
+
+  // EPR 타임아웃 수직선
+  if (toPx <= PAD + TW) {
+    ctx.strokeStyle = clrTimeout;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(toPx, Y_BUS - 12);
+    ctx.lineTo(toPx, Y_BUS + BH + 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 화살촉
+    ctx.fillStyle = clrTimeout;
+    ctx.beginPath();
+    ctx.moveTo(toPx, Y_BUS + BH + 10);
+    ctx.lineTo(toPx - 4, Y_BUS + BH + 4);
+    ctx.lineTo(toPx + 4, Y_BUS + BH + 4);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // 축 선
+  ctx.strokeStyle = '#ADB5BD';
+  ctx.lineWidth = 0.7;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(PAD, Y_BUS + BH + 2);
+  ctx.lineTo(PAD + TW, Y_BUS + BH + 2);
+  ctx.stroke();
+
+  // 눈금
+  ctx.fillStyle = '#ADB5BD';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  const tickCount = 5;
+  for (let i = 0; i <= tickCount; i++) {
+    const ms  = Math.round(TMAX * i / tickCount);
+    const tx  = PAD + TW * i / tickCount;
+    ctx.beginPath();
+    ctx.moveTo(tx, Y_BUS + BH + 2);
+    ctx.lineTo(tx, Y_BUS + BH + 7);
+    ctx.stroke();
+    ctx.fillText(ms + 'ms', tx, Y_BUS + BH + 17);
+  }
+
+  // 레이블들
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+
+  // Poll 레이블
+  ctx.fillStyle = clrPoll;
+  ctx.fillText('Poll', PAD + POLL_W / 2, Y_BUS - 2);
+
+  // PIT 갭 레이블
+  if (TW * pit / TMAX > 30) {
+    ctx.fillStyle = '#0F5132';
+    const gapMidX = PAD + POLL_W + TW * pit / TMAX / 2;
+    ctx.fillText('PIT 대기', gapMidX, Y_BUS + BH + 2 - 3);
+  }
+
+  // EPR 타임아웃 레이블
+  if (toPx <= PAD + TW - 4) {
+    ctx.fillStyle = clrTimeout;
+    ctx.font = 'bold 11px sans-serif';
+    const labelX = Math.max(toPx, PAD + 60);
+    ctx.textAlign = toPx > PAD + TW * 0.7 ? 'right' : 'center';
+    ctx.fillText(`EPR 타임아웃  ${timeout}ms`, labelX - (toPx > PAD + TW * 0.7 ? 4 : 0), Y_BUS - 2);
+  } else {
+    ctx.fillStyle = clrTimeout;
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`EPR 타임아웃: ${timeout}ms (화면 밖)`, PAD + TW, Y_BUS - 2);
+  }
+
+  // 왼쪽 레이블 (버스)
+  ctx.fillStyle = clrText;
+  ctx.font      = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('DeviceNet', PAD - 4, Y_BUS + BH / 2 + 4);
+  ctx.fillText('버스', PAD - 4, Y_BUS + BH / 2 - 6);
+}
+
+eprSlider.addEventListener('input', update);
+pitSlider.addEventListener('input', update);
+window.addEventListener('resize', update);
+update();
+</script>
+</body>
+</html>
